@@ -1,6 +1,4 @@
-# :checkered_flag: NOME DO PROJETO
-
-**AlugAqui**
+# :checkered_flag: AlugAqui
 
 Sistema de divulgação de imóveis para aluguel, funcionando de forma semelhante a um marketplace ou fórum. Usuários poderão publicar anúncios de imóveis disponíveis para aluguel ou divulgar oportunidades encontradas. A aplicação terá como objetivo facilitar a divulgação e a busca por imóveis, sem realizar transações comerciais diretamente pela plataforma.
 

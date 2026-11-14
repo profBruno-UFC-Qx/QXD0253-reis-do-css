@@ -593,7 +593,7 @@ export interface ApiImovelImovel extends Struct.CollectionTypeSchema {
     singularName: 'imovel';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     aceita_pets: Schema.Attribute.Boolean & Schema.Attribute.Required;

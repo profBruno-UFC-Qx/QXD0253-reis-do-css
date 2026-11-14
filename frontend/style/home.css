@@ -1,0 +1,8 @@
+#msg-lista {
+  text-align: center;
+  padding: 48px 0;
+}
+
+#msg-lista[hidden] {
+  display: none;
+}

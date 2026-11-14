@@ -1,0 +1,83 @@
+#lista-anuncios {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+#lista-anuncios > li {
+  display: flex;
+}
+
+.anuncio {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.anuncio .card-img-top {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.anuncio .card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  padding: 16px;
+}
+
+.anuncio .btn-detalhes {
+  margin-top: auto;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #1d5675;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+}
+
+.anuncio .card-title {
+  font-family: "Nunito", sans-serif;
+}
+
+.anuncio .anuncio-preco {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: auto 0 12px;
+}
+
+.anuncio .btn-detalhes {
+  margin-top: 0;
+}
+
+#msg-lista {
+  text-align: center;
+  padding: 48px 0;
+}
+
+#paginacao {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+#msg-lista[hidden],
+#paginacao[hidden] {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  #lista-anuncios { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  #lista-anuncios { grid-template-columns: 1fr; }
+}

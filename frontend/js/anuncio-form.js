@@ -1,5 +1,8 @@
 import { obterUsuario } from "./auth.js";
-import { request, uploadArquivos, urlMidia } from "./api.js";
+import { urlMidia } from "./api.js";
+import { criarImovel, atualizarImovel, excluirImovel } from "./services/imovelService.js";
+import { buscarAnuncio, criarAnuncio, atualizarAnuncio, excluirAnuncio, enviarFotos } from "./services/anuncioService.js";
+
 
 const usuario = obterUsuario();
 if (!usuario) location.replace("login.html");
@@ -145,7 +148,8 @@ async function excluirAnuncioAtual() {
 
   definirFormularioAtivo(false);
   try {
-    await request(`/anuncios/${anuncioId}`, { method: "DELETE" });
+    await excluirAnuncio(anuncioId);
+    await excluirImovel(documentoImovel).catch(() => {});
     location.href = "meus-anuncios.html";
   } catch (erro) {
     definirFormularioAtivo(true);
@@ -171,13 +175,11 @@ async function carregarEdicao() {
   definirFormularioAtivo(false);
   tituloForm.textContent = "Editar anúncio";
   btnSalvar.textContent = "Salvar alterações";
-  ajudaFotos.textContent = "Envie novas fotos só se quiser trocar as atuais. As imagens antigas são mantidas.";
+  ajudaFotos.textContent = "Envie novas fotos só se quiser trocar as atuais.";
 
   try {
-  const resposta = await request(`/anuncios/${anuncioId}`);
-  const item = resposta.data;
+  const item = await buscarAnuncio(anuncioId);
 
-  if (!item) throw new Error("Anúncio não encontrado.");
 
   const imovel = item.imovel;
   if (!imovel?.documentId) throw new Error("Imóvel deste anúncio não foi encontrado.");
@@ -206,20 +208,6 @@ async function carregarEdicao() {
   }
 }
 
-function dadosImovel(dados) {
-  const corpo = {
-    tipo: dados.tipo,
-    bairro: dados.bairro,
-    qtd_quartos: dados.qtd_quartos,
-    qtd_banheiros: dados.qtd_banheiros,
-    aceita_pets: dados.aceita_pets,
-    mobiliado: dados.mobiliado,
-  };
-  if (dados.rua) corpo.rua = dados.rua;
-  if (dados.numero) corpo.numero = dados.numero;
-  if (dados.cep) corpo.cep = dados.cep;
-  return corpo;
-}
 
 async function salvar(evento) {
   evento.preventDefault();
@@ -240,43 +228,20 @@ async function salvar(evento) {
   definirFormularioAtivo(false);
   btnSalvar.textContent = "Salvando…";
 
-  try {
-    let idsImagens = [...imagensExistentesIds];
-    if (dados.arquivosNovos.length) {
-      const enviadas = await uploadArquivos(dados.arquivosNovos);
-      idsImagens = enviadas.map((f) => f.id);
-    }
+  const usuario = obterUsuario();
+  let imovelCriado = null;
 
-    const corpoImovel = { data: dadosImovel(dados) };
-    const corpoAnuncio = {
-      data: {
-        titulo: dados.titulo,
-        descricao: dados.descricao,
-        preco: dados.preco,
-        imagens: idsImagens,
-        status_anuncio: "ativo",
-      },
-    };
+  try {
+    const idsImagens = dados.arquivosNovos.length
+      ? await enviarFotos(dados.arquivosNovos)
+      : imagensExistentesIds;
 
     if (anuncioId) {
-      await request(`/imoveis/${documentoImovel}?status=published`, {
-        method: "PUT",
-        body: corpoImovel,
-      });
-      await request(`/anuncios/${anuncioId}?status=published`, {
-        method: "PUT",
-        body: corpoAnuncio,
-      });
+      await atualizarImovel(documentoImovel, dados);
+      await atualizarAnuncio(anuncioId, dados, idsImagens);
     } else {
-      const imovelCriado = await request("/imoveis?status=published", {
-        method: "POST",
-        body: corpoImovel,
-      });
-      corpoAnuncio.data.imovel = imovelCriado.data.documentId;
-      await request("/anuncios?status=published", {
-        method: "POST",
-        body: corpoAnuncio,
-      });
+      imovelCriado = await criarImovel(dados);
+      await criarAnuncio(dados, idsImagens, imovelCriado.documentId, usuario.id);
     }
 
     mostrarMsg(anuncioId ? "Alterações salvas!" : "Anúncio publicado!", false);
@@ -285,6 +250,9 @@ async function salvar(evento) {
       location.href = "meus-anuncios.html?salvo=1";
     }, 600);
   } catch (erro) {
+    if (imovelCriado) {
+      await excluirImovel(imovelCriado.documentId).catch(() => {});
+    }
     mostrarMsg(erro.message || "Não foi possível salvar.");
     definirFormularioAtivo(true);
     btnSalvar.textContent = anuncioId ? "Salvar alterações" : "Publicar anúncio";
